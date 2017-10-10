@@ -14,8 +14,9 @@ and so real time can be predicted.
 
 Edit "evestim.txt" file and just run it.
 It will update itself calling "evestim" script via shebang line.
+If your OS does not support shebang, then just run "evestim" script.
 
-Lines starting with anything but digit or "-" are comments.
+Lines starting with "#" or anything but digit or "-" are comments.
 
 Each other line is:
 
@@ -46,7 +47,7 @@ TODO: Move from trivial min/max to more precise probability percentiles.
 
 Velocity is limited in config below to avoid division by zero, infinities, etc.
 
-evestim version 0.1.0
+evestim version 0.1.1
 Copyright (C) 2017 by Denis Ryzhkov <denisr@denisr.com>
 MIT License, see http://opensource.org/licenses/MIT
 """
@@ -65,6 +66,7 @@ PRECISION = 1
 EXPECTED_FILE_NAME = 'evestim.txt'
 FIELDS_SEP = ' '
 RANGE_SEP = '-'
+COMMENT_PREFIX = '#'
 
 FLOAT_FORMAT = '{{:.{}f}}'.format(PRECISION)
 RANGE_FORMAT = FLOAT_FORMAT + RANGE_SEP + FLOAT_FORMAT
@@ -84,7 +86,7 @@ def update(file_name):
     max_velocity = WORST_MIN_VELOCITY
 
     for line in lines:
-        if line and (line[0].isdigit() or line[0] == RANGE_SEP):
+        if line and not line.startswith(COMMENT_PREFIX) and (line[0].isdigit() or line[0] == RANGE_SEP):
             velocity, estimation, real, title = line.split(FIELDS_SEP, 3)
 
             ### velocity = "-" or range
@@ -136,7 +138,8 @@ def update(file_name):
 
 if __name__ == '__main__':
     try:
-        update(sys.argv[1] if len(sys.argv) > 1 else EXPECTED_FILE_NAME)
+        file_name = sys.argv[1] if len(sys.argv) > 1 else EXPECTED_FILE_NAME
+        update(file_name)
 
     except Exception:
         print(usage)

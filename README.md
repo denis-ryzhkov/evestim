@@ -11,9 +11,10 @@ but you can become consistent in how you underestimate,
 and so real time can be predicted.
 
 Edit "evestim.txt" file and just run it.  
-It will update itself calling "evestim" script via shebang line.
+It will update itself calling "evestim" script via shebang line.  
+If your OS does not support shebang, then just run "evestim" script.
 
-Lines starting with anything but digit or "-" are comments.
+Lines starting with "#" or anything but digit or "-" are comments.
 
 Each other line is:
 
@@ -44,6 +45,6 @@ TODO: Move from trivial min/max to more precise probability percentiles.
 
 Velocity is limited in config below to avoid division by zero, infinities, etc.
 
-evestim version 0.1.0  
+evestim version 0.1.1  
 Copyright (C) 2017 by Denis Ryzhkov <denisr@denisr.com>  
 MIT License, see http://opensource.org/licenses/MIT
