@@ -45,6 +45,6 @@ TODO: Move from trivial min/max to more precise probability percentiles.
 
 Velocity is limited in config below to avoid division by zero, infinities, etc.
 
-evestim version 0.1.1  
+evestim version 0.1.2  
 Copyright (C) 2017 by Denis Ryzhkov <denisr@denisr.com>  
 MIT License, see http://opensource.org/licenses/MIT
