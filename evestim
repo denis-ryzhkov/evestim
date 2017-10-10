@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 usage = """
-evestim version 0.1.2
+evestim version 0.2.0
 Copyright (C) 2017 by Denis Ryzhkov <denisr@denisr.com>
 MIT License, see http://opensource.org/licenses/MIT
 
@@ -10,78 +10,69 @@ Usage docs: https://github.com/denis-ryzhkov/evestim
 
 ### import
 
+from collections import deque
 import sys
 from traceback import print_exc
 
 ### config
 
-WORST_MIN_VELOCITY = 0.1
-WORST_MAX_VELOCITY = 10.0
-PRECISION = 1
+HISTORY_DEPTH = 100
+DECIMAL_PLACES = 1
+MIN_OPTIMISM = 0.1
+MAX_OPTIMISM = 10.0
 
 EXPECTED_FILE_NAME = 'evestim.txt'
 FIELDS_SEP = ' '
 RANGE_SEP = '-'
 COMMENT_PREFIX = '#'
 
-FLOAT_FORMAT = '{{:.{}f}}'.format(PRECISION)
-RANGE_FORMAT = FLOAT_FORMAT + RANGE_SEP + FLOAT_FORMAT
+NUMBER_FORMAT = '{{:.{}f}}'.format(DECIMAL_PLACES)
+RANGE_FORMAT = NUMBER_FORMAT + RANGE_SEP + NUMBER_FORMAT
 
 ### update
 
 def update(file_name):
+
+    ### input
+
     assert file_name.endswith(EXPECTED_FILE_NAME), (file_name, EXPECTED_FILE_NAME)
 
     with open(file_name, 'r') as f:
         lines = list(f)
 
     new_lines = []
-
-    # Inversion is required to find real min/max later:
-    min_velocity = WORST_MAX_VELOCITY
-    max_velocity = WORST_MIN_VELOCITY
+    optimism_samples = deque()
 
     for line in lines:
         if line and not line.startswith(COMMENT_PREFIX) and (line[0].isdigit() or line[0] == RANGE_SEP):
-            velocity, estimation, real, title = line.split(FIELDS_SEP, 3)
+            assert line.count(FIELDS_SEP) >= 3, line
+            optimism, estimate, real, title = line.split(FIELDS_SEP, 3)
 
-            ### velocity = "-" or range
+            ### a new task
 
-            if RANGE_SEP in velocity:
+            if RANGE_SEP in real:
+                assert RANGE_SEP in optimism, line
 
-                ### real = "-" or range
+                min_optimism = min(optimism_samples) if optimism_samples else MIN_OPTIMISM
+                max_optimism = max(optimism_samples) if optimism_samples else MAX_OPTIMISM
+                optimism = RANGE_FORMAT.format(min_optimism, max_optimism)
+                real = RANGE_FORMAT.format(min_optimism * float(estimate), max_optimism * float(estimate))
 
-                if RANGE_SEP in real:
+            ### just done task
 
-                    velocity = RANGE_FORMAT.format(
-                        min(min_velocity, max_velocity),
-                        max(min_velocity, max_velocity),
-                    )  # Extra min/max ensures even initial inverted values will be in ascending order.
+            elif RANGE_SEP in optimism:
+                optimism = NUMBER_FORMAT.format(float(real) / float(estimate))
 
-                    min_real = float(estimation) / max_velocity
-                    max_real = float(estimation) / min_velocity
-                    real = RANGE_FORMAT.format(
-                        min(min_real, max_real),
-                        max(min_real, max_real),
-                    )
+            ### done task
 
-                ### real is exact number
-
-                else:
-                    velocity = FLOAT_FORMAT.format(float(estimation) / float(real))
-
-            ### update min/max velocity
-
-            if RANGE_SEP not in velocity:
-                v = float(velocity)
-                if min_velocity > v:
-                    min_velocity = max(v, WORST_MIN_VELOCITY)
-                if max_velocity < v:
-                    max_velocity = min(v, WORST_MAX_VELOCITY)
+            if RANGE_SEP not in optimism:
+                optimism_samples.append(float(optimism))
+                if len(optimism_samples) > HISTORY_DEPTH:
+                    optimism_samples.popleft()
 
             ### output
 
-            line = FIELDS_SEP.join((velocity, estimation, real, title))
+            line = FIELDS_SEP.join((optimism, estimate, real, title))
 
         new_lines.append(line)
 
