@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 usage = """
-evestim version 0.2.0
+evestim version 0.2.1
 Copyright (C) 2017 by Denis Ryzhkov <denisr@denisr.com>
 MIT License, see http://opensource.org/licenses/MIT
 
@@ -10,7 +11,7 @@ Usage docs: https://github.com/denis-ryzhkov/evestim
 
 ### import
 
-from collections import deque
+from collections import Counter, deque
 import sys
 from traceback import print_exc
 
@@ -29,21 +30,32 @@ COMMENT_PREFIX = '#'
 NUMBER_FORMAT = '{{:.{}f}}'.format(DECIMAL_PLACES)
 RANGE_FORMAT = NUMBER_FORMAT + RANGE_SEP + NUMBER_FORMAT
 
+CHART_WIDTH = int(MAX_OPTIMISM * 10**DECIMAL_PLACES)  # Number of possible optimism values.
+CHART_HEIGHT = 10
+CHART_BACKGROUND = ' '
+CHART_FOREGROUND = '█'
+
 ### update
 
 def update(file_name):
 
-    ### input
+    ### read
 
     assert file_name.endswith(EXPECTED_FILE_NAME), (file_name, EXPECTED_FILE_NAME)
 
     with open(file_name, 'r') as f:
         lines = list(f)
 
+    ### parse
+
     new_lines = []
     optimism_samples = deque()
 
     for line in lines:
+
+        if CHART_FOREGROUND in line:
+            continue  # Will add new chart in the end.
+
         if line and not line.startswith(COMMENT_PREFIX) and (line[0].isdigit() or line[0] == RANGE_SEP):
             assert line.count(FIELDS_SEP) >= 3, line
             optimism, estimate, real, title = line.split(FIELDS_SEP, 3)
@@ -70,16 +82,65 @@ def update(file_name):
                 if len(optimism_samples) > HISTORY_DEPTH:
                     optimism_samples.popleft()
 
-            ### output
+            ### new line
 
             line = FIELDS_SEP.join((optimism, estimate, real, title))
 
         new_lines.append(line)
 
+    ### chart
+
+    new_lines.extend(get_chart(optimism_samples))
+
+    ### write
+
     new_lines = ''.join(new_lines)
 
     with open(file_name, 'w') as f:
         f.write(new_lines)
+
+### get_chart
+
+def get_chart(values):
+
+    if not values:
+        return []
+
+    ### x = value, y = how many times this value was found
+
+    counts = Counter(values)
+    xs = counts.keys()
+    ys = counts.values()
+
+    ### scaling
+
+    min_x = min(xs)
+    max_x = max(xs)
+    span_x = float(max_x - min_x)
+    max_y = float(max(ys))
+
+    ### chart
+
+    chart = [[CHART_BACKGROUND] * CHART_WIDTH for _ in xrange(CHART_HEIGHT)]
+
+    for x, y in counts.iteritems():
+
+        ### relative: 0..1
+
+        x = (x - min_x) / span_x if span_x else 0.5
+        y = y / max_y
+
+        ### absolute: 0..(WIDTH|HEIGHT - 1)
+
+        x = int(round(x * (CHART_WIDTH - 1)))
+        y = int(round((CHART_HEIGHT - 1) * (1 - y)))
+
+        ### vertical
+
+        for y in xrange(y, CHART_HEIGHT):
+            chart[y][x] = CHART_FOREGROUND
+
+    return [''.join(row) + '\n' for row in chart]
 
 ### main
 

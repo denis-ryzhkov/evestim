@@ -44,8 +44,20 @@ At the same time we should not ignore bad estimates if they are fresh enough.
     -->
     1.5-2.0 4 6.0-8.0 https://dev.example.com/issues/1232 - A new task.
 
+In this example estimate of 4 hours was amortized to 6-8 hours.  
+The range could be much wider if you have done inconsistent estimates recently.  
+It is tempting to narrow the range automatically via the "confidence interval",  
+but the [black swan theory](https://en.wikipedia.org/wiki/Black_swan_theory)
+advises to avoid ignoring information that looks improbable, as it may bite you.  
+That's why script adds a chart showing distribution of probability in min/max range.  
+You may find that particular distribution could be or should not be trimmed.
+
+- [ ] TODO: Allow to select a range at chart that fits enough probability.
+Use this range for predictions instead of 100% min/max.
+Requires either GUI or configuration included into the file format.
+
 In case you have zero history, optimism would be limited to wide enough 0.1-10.0 range.  
-Script recalculates ranges each time it has more data, as if they were just "-".
+Script will recalculate each range once it has more data.
 
 Once you finished the task, replace predicted range with real time spent  
 and the script will calculate precise optimism for this task:
@@ -54,10 +66,8 @@ and the script will calculate precise optimism for this task:
     -->
     1.8 4 7 https://dev.example.com/issues/1232 - Just done task.
 
-TODO: Add an option to sacrifice probability to get more narrow ranges.  
-However the [black swan theory](https://en.wikipedia.org/wiki/Black_swan_theory) advises to avoid ignoring information that looks improbable.  
-Maybe gradient ranges via GUI (web?) would be the most valuable.
+It will become one of 100 recent lines of history used for the next predictions.
 
-evestim version 0.2.0  
+evestim version 0.2.1  
 Copyright (C) 2017 by Denis Ryzhkov <denisr@denisr.com>  
 MIT License, see http://opensource.org/licenses/MIT
