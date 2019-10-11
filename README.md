@@ -62,7 +62,7 @@ Script will recalculate each range once it has more data.
 Once you finished the task, replace predicted range with real time spent  
 and the script will calculate precise optimism for this task:
 
-    1.5-2.0 4 7 https://dev.example.com/issues/1232 - Just done task.
+    1.5-2.0 4 6.0-8.0 https://dev.example.com/issues/1232 - Just done task.
     -->
     1.8 4 7 https://dev.example.com/issues/1232 - Just done task.
 
